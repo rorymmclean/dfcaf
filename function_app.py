@@ -50,9 +50,6 @@ documents = db[COLLECTION_NAMES[2]]
 chunks    = db[COLLECTION_NAMES[3]]
 sharepoint = db[COLLECTION_NAMES[4]]
 
-# openai.api_key = '1e8470d9073047df996d72388f9d2882'
-# openai.azure_endpoint = 'https://dfc-dev-instance.openai.azure.com/'
-# openai.api_type = "azure"
 azureclient = AzureOpenAI(
   azure_endpoint = "https://dfc-dev-instance.openai.azure.com/", #os.getenv("AZURE_OPENAI_ENDPOINT"), 
   api_key = '1e8470d9073047df996d72388f9d2882', #os.getenv("AZURE_OPENAI_API_KEY"),  
