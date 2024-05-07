@@ -11,3 +11,5 @@ langchain_core
 langchain_openai 
 openai
 pandas
+python-docx
+PyMuPDF
