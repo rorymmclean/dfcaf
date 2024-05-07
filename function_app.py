@@ -4,7 +4,6 @@ import json
 import logging
 import pymongo
 import uuid
-import pytz
 import docx
 import fitz
 import io
@@ -13,7 +12,6 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from openai import AzureOpenAI
 from openai import OpenAI
-import openai
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List
 import pandas as pd
