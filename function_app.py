@@ -108,7 +108,7 @@ def chunk_add_doc(mysession, mysource, mydata):
     return len(df)  
 
 ############### Sessions 
-@app.route(route="session_get")
+@app.route(route="sessionget")
 def session_query(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Session Query.')
     # Get the query parameters
