@@ -18,7 +18,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List
 import pandas as pd
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+app = func.FunctionApp() # http_auth_level=func.AuthLevel.ANONYMOUS)
 
 def default_serializer(obj):
     if isinstance(obj, datetime):
