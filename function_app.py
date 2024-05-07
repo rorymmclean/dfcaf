@@ -136,7 +136,7 @@ def session_query(req: func.HttpRequest) -> func.HttpResponse:
     json_string = json.dumps(mydocuments, default=default_serializer)
     return func.HttpResponse(json_string, status_code=200)
 
-@app.function_name(name="session_add")
+@app.function_name(name="httpTrigger")
 @app.route(route="session_add", auth_level=func.AuthLevel.ANONYMOUS)
 def session_add(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Session Add.')
