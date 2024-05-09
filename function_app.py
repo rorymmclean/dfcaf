@@ -16,7 +16,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List
 import pandas as pd
 
-app = func.FunctionApp() #http_auth_level=func.AuthLevel.ANONYMOUS)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 def default_serializer(obj):
     if isinstance(obj, datetime):
@@ -104,7 +104,6 @@ def chunk_add_doc(mysession, mysource, mydata):
 
 ############### Sessions 
 @app.route(route="session_get")
-@app.function_name(name="session_query")
 def session_query(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Session Query.')
     # Get the query parameters
@@ -136,7 +135,6 @@ def session_query(req: func.HttpRequest) -> func.HttpResponse:
     json_string = json.dumps(mydocuments, default=default_serializer)
     return func.HttpResponse(json_string, status_code=200)
 
-@app.function_name(name="httpTrigger")
 @app.route(route="session_add", auth_level=func.AuthLevel.ANONYMOUS)
 def session_add(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Session Add.')
@@ -170,7 +168,6 @@ def session_add(req: func.HttpRequest) -> func.HttpResponse:
 
 ################ Documents
 @app.route(route="doc_get")
-@app.function_name(name="doc_query")
 def doc_query(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Document Query.')
 
@@ -195,7 +192,6 @@ def doc_query(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(json_string, status_code=200)
 
 @app.route(route="doc_add")
-@app.function_name(name="doc_add")
 def doc_add(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Log Add.')
     # Get the query parameters
@@ -224,7 +220,6 @@ def doc_add(req: func.HttpRequest) -> func.HttpResponse:
 
 ################ Logs
 @app.route(route="log_get")
-@app.function_name(name="log_query")
 def log_query(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Log Query.')
     # Get the query parameters
@@ -250,7 +245,6 @@ def log_query(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(json_string, status_code=200)
 
 @app.route(route="log_add")
-@app.function_name(name="log_add")
 def log_add(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Log Add.')
     # Get the query parameters
@@ -284,7 +278,6 @@ def log_add(req: func.HttpRequest) -> func.HttpResponse:
 
 ################ Chunks
 @app.route(route="chunk_get")
-@app.function_name(name="chunk_get")
 def chunk_get(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Chunk Get.')
 
@@ -309,7 +302,6 @@ def chunk_get(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(json_string, status_code=200)
 
 @app.route(route="chunk_search")
-@app.function_name(name="chunk_search")
 def chunk_search(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Chunk Search.')
     # Get the query parameters
@@ -373,7 +365,6 @@ def chunk_search(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("", status_code=200)
 
 @app.route(route="chunk_public_search")
-@app.function_name(name="chunk_public_search")
 def chunk_public_search(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start Public Chunk Search.')
     # Get the query parameters
@@ -426,7 +417,6 @@ def chunk_public_search(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(myoutput, status_code=200)
 
 @app.route(route="file_add")
-@app.function_name(name="file_add")
 def file_add(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start File Add.')
     logging.info('*****')
