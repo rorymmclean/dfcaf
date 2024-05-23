@@ -78,7 +78,7 @@ def get_llm_response(myprompt, model="35_model"):
 
     return myresults
 
-def chunk_add_doc(mysession, mysource, mydata):
+def chunk_add_doc(mysession, mysource, mydata, myttl):
     # newkey = doc_add(mysession, mysource)
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size = 5000,
@@ -95,12 +95,37 @@ def chunk_add_doc(mysession, mysource, mydata):
     for doc in records:
         pagecount += 1
         myembedding = get_embedding(doc['Text'])
-        mydict = { "mysession":mysession, "sourceName": mysource, "text": doc['Text'], "vectors": myembedding, "chunk":pagecount, "creationdate": datetime.now(), "expiration": datetime.now(timezone.utc)+ timedelta(hours=12) }
+        mydict = { "mysession":mysession, "sourceName": mysource, "text": doc['Text'], "vectors": myembedding, "chunk":pagecount, "creationdate": datetime.now(), "expiration": datetime.now(timezone.utc)+ timedelta(minutes=int(myttl)) }
         x = chunks.insert_one(mydict)
-    mydict = { "mysession":mysession, "sourceName": mysource, "creationdate": datetime.now(), "expiration": datetime.now(timezone.utc)+ timedelta(hours=12) }
+    mydict = { "mysession":mysession, "sourceName": mysource, "creationdate": datetime.now(), "expiration": datetime.now(timezone.utc)+ timedelta(minutes=int(myttl)) }
     x = documents.insert_one(mydict)      
         
     return len(df)  
+
+def public_chunk_add_doc(mysession, mysource, mydata, myttl):
+    # newkey = doc_add(mysession, mysource)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size = 5000,
+        chunk_overlap  = 0,
+        length_function = len,)
+    texts = text_splitter.create_documents([mydata])
+
+    data = [{'Text': item.page_content} for item in texts]
+    df = pd.DataFrame(data, columns=['Text'])
+    df['id'] = range(len(df))
+
+    records = df.to_dict("records")
+    pagecount = 0
+    for doc in records:
+        pagecount += 1
+        myembedding = get_embedding(doc['Text'])
+        mydict = { "mysession":mysession, "sourceName": mysource, "text": doc['Text'], "vectors": myembedding, "chunk":pagecount, "creationdate": datetime.now(), "expiration": datetime.now(timezone.utc)+ timedelta(minutes=int(myttl)) }
+        x = sharepoint.insert_one(mydict)
+    mydict = { "mysession":mysession, "sourceName": mysource, "creationdate": datetime.now(), "expiration": datetime.now(timezone.utc)+ timedelta(minutes=int(myttl)) }
+    x = documents.insert_one(mydict)      
+        
+    return len(df)  
+
 
 ############### Sessions 
 @app.route(route="session_get")
@@ -421,6 +446,9 @@ def file_add(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Start File Add.')
     logging.info('*****')
     mysession = req.params.get('mysession')
+    ttlvalue = req.params.get('ttl')
+    if not ttlvalue:
+        kvalue = 60*24
     for input_file in req.files.values():
         filename = input_file.filename
         file_ext = input_file.filename.split('.')[-1].lower()
@@ -466,6 +494,64 @@ def file_add(req: func.HttpRequest) -> func.HttpResponse:
 
     totchars = len(mydata_all)
     if totchars > 0:
-        chunk_cnt = chunk_add_doc(mysession, stored_filename, mydata_all)
+        chunk_cnt = chunk_add_doc(mysession, stored_filename, mydata_all, ttlvalue)
+ 
+    return func.HttpResponse("finished", status_code=200)
+
+@app.route(route="public_file_add")
+def public_file_add(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Start Public File Add.')
+    logging.info('*****')
+    mysession = req.params.get('mysession')
+    ttlvalue = req.params.get('ttl')
+    if not ttlvalue:
+        kvalue = 60*24*365*10
+
+    for input_file in req.files.values():
+        filename = input_file.filename
+        file_ext = input_file.filename.split('.')[-1].lower()
+        contents = input_file.stream.read()
+        logging.info('Filename: %s' % filename)
+        logging.info('Extension: %s' % file_ext)
+        logging.info("Session: %s" % mysession)
+        # logging.info('Contents:')
+        # logging.info(contents)
+    logging.info('*****')
+
+    stored_filename = filename
+    chacters_to_remove = "-|_/\*"
+    for char in chacters_to_remove:
+        stored_filename = stored_filename.replace(char, '')
+    mydata_all = ""
+    if file_ext in ["txt","csv","text"]:
+        mydata_all = contents.decode('utf-8')
+    elif file_ext == "docx":
+        doc = docx.Document(io.BytesIO(contents))
+        all_paras = doc.paragraphs
+        this_doc = ''
+        for para in all_paras:
+            this_doc = this_doc+para.text + "\n"
+        mydata_all = mydata_all + this_doc + '\n'  
+    elif file_ext == "pdf":
+        doc = fitz.open(stream=contents)
+        this_doc = ''
+        for page in doc:
+            this_doc = this_doc+page.get_text() + " \n"
+        mydata_all = mydata_all + this_doc + '\n' 
+    elif file_ext == 'xlsx':
+        for z in range(10):
+            try:
+                myexcel = pd.read_excel(contents, sheet_name=z) 
+                for index, row in myexcel.iterrows():
+                    rowtext = ""
+                    for k in myexcel.keys():
+                        rowtext = rowtext + str(row[k]) + " | "
+                mydata_all = mydata_all + rowtext + "\n"
+            except:
+                pass
+
+    totchars = len(mydata_all)
+    if totchars > 0:
+        chunk_cnt = public_chunk_add_doc(mysession, stored_filename, mydata_all, ttlvalue)
  
     return func.HttpResponse("finished", status_code=200)
